@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>نوتس وبومودورو ومهام</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Cairo:wght@600;700&family=Tajawal:wght@500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Cairo", "Tajawal", "Segoe UI", Tahoma, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      background: #eef2f6;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* شريط التنقل العلوي بين الواجهات الثلاث */
+    .top-nav {
+      background: #0f172a;
+      padding: 8px 10px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      z-index: 30;
+    }
+
+    .nav-tab {
+      flex: 1;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+      padding: 8px 6px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-tab.active {
+      background: #ffffff;
+      color: #0f172a;
+      border-color: #ffffff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* حاوية الواجهات */
+    .view-section {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .view-section.active {
+      display: flex;
+    }
+
+    /* ===== 1. واجهة الملاحظات ===== */
+    .toolbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      max-height: 36vh;
+      overflow-y: auto;
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #f8fafc;
+      padding: 4px 7px;
+      border-radius: 9px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .tool-group label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    select.ui-select {
+      padding: 4px 6px;
+      border-radius: 7px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 11px;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
+
+    button {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 5px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      transition: opacity 0.15s ease;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    button.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    button.danger {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    input[type="color"] {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      width: 55px;
+    }
+
+    /* شريط الملصقات المنبثق عند اختيار وضع الملصقات */
+    .sticker-drawer {
+      display: none;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 10px;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      z-index: 15;
+    }
+
+    .sticker-drawer.open {
+      display: flex;
+    }
+
+    .sticker-list {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      flex: 1;
+    }
+
+    .sticker-item {
+      font-size: 22px;
+      padding: 3px 7px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      cursor: pointer;
+    }
+
+    .sticker-item.selected {
+      background: #dbeafe;
+      border-color: #2563eb;
+      transform: scale(1.08);
+    }
+
+    /* شريط التحكم في صفحات PDF */
+    .pdf-bar {
+      display: none;
+      background: #eff6ff;
+      border-bottom: 1px solid #bfdbfe;
+      padding: 5px 10px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+
+    .pdf-bar.open {
+      display: flex;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      flex: 1;
+      margin: 8px;
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+
+    .canvas-wrapper.paper-plain {
+      background-color: #ffffff;
+      background-image: none;
+    }
+
+    .canvas-wrapper.paper-lined {
+      background-color: #ffffff;
+      background-image:
+        linear-gradient(to left, transparent 42px, #fca5a5 42px, #fca5a5 44px, transparent 44px),
+        repeating-linear-gradient(to bottom, transparent 0px, transparent 31px, #cbd5e1 31px, #cbd5e1 32px);
+      background-position: 0 12px;
+    }
+
+    .canvas-wrapper.paper-grid {
+      background-color: #ffffff;
+      background-image:
+        linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+        linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* طبقة الخلفية (PDF أو صور) + طبقة الرسم والكتابة */
+    #bgLayerCanvas, #noteCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #bgLayerCanvas {
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    #noteCanvas {
+      z-index: 2;
+      touch-action: none;
+      background: transparent;
+    }
+
+    #textPanel {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 10px;
+      display: none;
+      background: rgba(255, 255, 255, 0.98);
+      border: 2px solid #2563eb;
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      z-index: 20;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #textInputBox {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+      direction: rtl;
+      user-select: text;
+    }
+
+    #confirmTextBtn {
+      background: #16a34a;
+      color: #ffffff;
+      border-color: #16a34a;
+      white-space: nowrap;
+    }
+
+    .status-bar {
+      font-size: 11px;
+      color: #475569;
+      padding: 0 12px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .save-badge {
+      color: #15803d;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* ===== 2. واجهة بومودورو المستقلة ===== */
+    .pomo-view {
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .pomo-card {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 24px 20px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .pomo-mode-switch {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      background: #f1f5f9;
+      padding: 5px;
+      border-radius: 12px;
+    }
+
+    .pomo-mode-switch button {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      background: transparent;
+      border-radius: 9px;
+      font-size: 13px;
+    }
+
+    .pomo-mode-switch button.active {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .pomo-mode-switch button.break-active {
+      background: #16a34a;
+      color: #ffffff;
+    }
+
+    .pomo-big-clock {
+      font-size: 56px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+      color: #1e3a8a;
+      background: #eff6ff;
+      border: 2px solid #bfdbfe;
+      width: 100%;
+      text-align: center;
+      padding: 18px 12px;
+      border-radius: 18px;
+    }
+
+    .pomo-big-clock.break-mode {
+      color: #166534;
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .pomo-custom-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .pomo-min-input {
+      width: 68px;
+      padding: 7px 8px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .pomo-main-actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .pomo-main-actions button {
+      flex: 1;
+      padding: 11px 12px;
+      font-size: 14px;
+      border-radius: 12px;
+    }
+
+    button.start-btn {
+      background: #16a34a;
+      color: #ffffff;
+      border-color: #16a34a;
+    }
+
+    button.pause-btn {
+      background: #d97706;
+      color: #ffffff;
+      border-color: #d97706;
+    }
+
+    .pomo-footer-info {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      background: #f8fafc;
+      padding: 8px 14px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* ===== 3. واجهة قائمة المهام (To-Do) المستقلة ===== */
+    .todo-view {
+      align-items: center;
+      padding: 14px;
+      overflow-y: auto;
+    }
+
+    .todo-card {
+      width: 100%;
+      max-width: 520px;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: 100%;
+    }
+
+    .todo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 10px;
+    }
+
+    .todo-header h2 {
+      margin: 0;
+      font-size: 16px;
+      color: #0f172a;
+    }
+
+    .todo-stats {
+      font-size: 12px;
+      font-weight: 700;
+      color: #15803d;
+      background: #f0fdf4;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #bbf7d0;
+    }
+
+    .todo-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .todo-input-row input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+      user-select: text;
+    }
+
+    .todo-input-row input:focus {
+      border-color: #2563eb;
+    }
+
+    .todo-add-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .todo-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.15s ease;
+    }
+
+    .todo-item.completed {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+
+    .todo-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      border: 2px solid #94a3b8;
+      background: #ffffff;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .todo-item.completed .todo-check {
+      background: #16a34a;
+      border-color: #16a34a;
+    }
+
+    .todo-text {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      word-break: break-word;
+      user-select: text;
+    }
+
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+
+    .todo-del-btn {
+      background: transparent;
+      border: none;
+      color: #dc2626;
+      font-size: 15px;
+      padding: 4px 6px;
+    }
+
+    .todo-empty {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+      padding: 24px 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- شريط التنقل بين الواجهات الثلاث -->
+  <nav class="top-nav">
+    <button type="button" id="tabNotes" class="nav-tab active" onclick="switchView('notes')">📝 الملاحظات</button>
+    <button type="button" id="tabPomo" class="nav-tab" onclick="switchView('pomodoro')">🍅 بومودورو</button>
+    <button type="button" id="tabTodo" class="nav-tab" onclick="switchView('todo')">✅ المهام</button>
+  </nav>
+
+  <!-- ===== 1. واجهة الملاحظات ===== -->
+  <section id="notesView" class="view-section active">
+    <div class="toolbar">
+      <!-- أدوات الرسم والكتابة والملصقات -->
+      <div class="tool-group">
+        <button type="button" id="penBtn" class="active" onclick="setMode('pen')">✏️ قلم</button>
+        <button type="button" id="textBtn" onclick="setMode('text')">⌨️ كيبورد</button>
+        <button type="button" id="stickerBtn" onclick="setMode('sticker')">✨ ملصقات</button>
+        <button type="button" id="eraserBtn" onclick="setMode('eraser')">🧽 ممحاة</button>
+      </div>
+
+      <!-- استيراد صورة / كاميرا / PDF -->
+      <div class="tool-group">
+        <button type="button" onclick="document.getElementById('galleryInput').click()">🖼️ صورة</button>
+        <button type="button" onclick="document.getElementById('cameraInput').click()">📷 كاميرا</button>
+        <button type="button" onclick="document.getElementById('pdfInput').click()">📄 PDF</button>
+        <label for="mediaSizeSelect">حجمها:</label>
+        <select id="mediaSizeSelect" class="ui-select">
+          <option value="0.35">صغير</option>
+          <option value="0.65" selected>وسط</option>
+          <option value="0.92">كبير</option>
+        </select>
+      </div>
+
+      <!-- نوع الورقة -->
+      <div class="tool-group">
+        <label for="paperSelect">الورقة:</label>
+        <select id="paperSelect" class="ui-select" onchange="changePaperStyle(this.value)">
+          <option value="plain" selected>سادة</option>
+          <option value="lined">مسطّرة</option>
+          <option value="grid">مربعات</option>
+        </select>
+      </div>
+
+      <!-- إعدادات القلم -->
+      <div class="tool-group">
+        <label for="penColor">قلم:</label>
+        <input type="color" id="penColor" value="#1d4ed8" />
+        <label for="penSize">سمك:</label>
+        <input type="range" id="penSize" min="2" max="30" value="5" />
+      </div>
+
+      <!-- إعدادات الخط العربي الرسمي -->
+      <div class="tool-group">
+        <label for="fontSelect">خط:</label>
+        <select id="fontSelect" class="ui-select" onchange="syncTextPreviewStyle()">
+          <option value="Cairo" selected>Cairo</option>
+          <option value="Tajawal">Tajawal</option>
+          <option value="Amiri">Amiri</option>
+        </select>
+        <label for="textColor">لون:</label>
+        <input type="color" id="textColor" value="#111827" onchange="syncTextPreviewStyle()" />
+        <label for="textSize">حجم:</label>
+        <input type="range" id="textSize" min="16" max="48" value="24" oninput="syncTextPreviewStyle()" />
+      </div>
+
+      <!-- التراجع والمسح -->
+      <div class="tool-group">
+        <button type="button" id="undoBtn" onclick="undoLastAction()" disabled>↩️ تراجع</button>
+        <button type="button" onclick="clearCanvas()" class="danger">🗑️ مسح الكل</button>
+      </div>
+    </div>
+
+    <!-- شريط الملصقات الشغالة بكل الأحجام -->
+    <div id="stickerDrawer" class="sticker-drawer">
+      <div class="sticker-list" id="stickerList">
+        <button type="button" class="sticker-item selected" onclick="selectSticker(this, '⭐')">⭐</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '❤️')">❤️</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '✅')">✅</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '❌')">❌</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '💡')">💡</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '📌')">📌</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '🔥')">🔥</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '📚')">📚</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '🎯')">🎯</button>
+        <button type="button" class="sticker-item" onclick="selectSticker(this, '👏')">👏</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:5px;">
+        <label for="stickerSizeSelect" style="font-size:11px; font-weight:700;">حجم الملصق:</label>
+        <select id="stickerSizeSelect" class="ui-select">
+          <option value="26">صغير</option>
+          <option value="44" selected>وسط</option>
+          <option value="68">كبير</option>
+          <option value="96">ضخم</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- شريط التنقل بين صفحات ملف PDF -->
+    <div id="pdfBar" class="pdf-bar">
+      <span>📄 ملف PDF مفتوح</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button type="button" onclick="changePdfPage(-1)">◀ السابق</button>
+        <span id="pdfPageInfo">صفحة 1 / 1</span>
+        <button type="button" onclick="changePdfPage(1)">التالي ▶</button>
+        <button type="button" class="danger" onclick="closePdf()">إغلاق PDF</button>
+      </div>
+    </div>
+
+    <!-- مدخلات الملفات المخفية -->
+    <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)" />
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(event)" />
+    <input type="file" id="pdfInput" accept="application/pdf" style="display:none" onchange="handlePdfUpload(event)" />
+
+    <div class="canvas-wrapper paper-plain" id="wrapper">
+      <canvas id="bgLayerCanvas"></canvas>
+      <canvas id="noteCanvas"></canvas>
+
+      <div id="textPanel">
+        <input type="text" id="textInputBox" placeholder="اكتب النص بخط رسمي واضح..." />
+        <button type="button" id="confirmTextBtn" onclick="commitText()">إضافة</button>
+        <button type="button" onclick="hideTextPanel()">إلغاء</button>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span id="statusText">الوضع الحالي: قلم رسم — اسحب بصبعك للتلوين</span>
+      <span class="save-badge" id="saveStatus">💾 جاهز للحفظ التلقائي</span>
+    </div>
+  </section>
+
+  <!-- ===== 2. واجهة بومودورو المستقلة ===== -->
+  <section id="pomodoroView" class="view-section pomo-view">
+    <div class="pomo-card">
+      <div class="pomo-mode-switch">
+        <button type="button" id="focusModeBtn" class="active" onclick="switchPomoType('focus')">🍅 جلسة تركيز</button>
+        <button type="button" id="breakModeBtn" onclick="switchPomoType('break')">☕ وقت راحة</button>
+      </div>
+
+      <div class="pomo-big-clock" id="pomoDisplay">25:00</div>
+
+      <div class="pomo-custom-row">
+        <label for="customMinutes">مدة الجلسة (بالدقائق):</label>
+        <input type="number" id="customMinutes" class="pomo-min-input" min="1" max="120" value="25" onchange="applyCustomMinutes()" />
+      </div>
+
+      <div class="pomo-main-actions">
+        <button type="button" id="togglePomoBtn" class="start-btn" onclick="togglePomo()">▶ بدء</button>
+        <button type="button" onclick="resetPomo()">↺ إعادة ضبط</button>
+      </div>
+
+      <div class="pomo-footer-info" id="pomoSessionCount">جلسات التركيز المكتملة: 0</div>
+    </div>
+  </section>
+
+  <!-- ===== 3. واجهة قائمة المهام (To-Do) المستقلة ===== -->
+  <section id="todoView" class="view-section todo-view">
+    <div class="todo-card">
+      <div class="todo-header">
+        <h2>✅ قائمة مهام المذاكرة</h2>
+        <span class="todo-stats" id="todoStats">0 / 0 مكتمل</span>
+      </div>
+
+      <div class="todo-input-row">
+        <input type="text" id="todoInput" placeholder="اكتب مهمة جديدة (مثلاً: مراجعة درس العلوم)..." onkeydown="if(event.key==='Enter') addTodoItem()" />
+        <button type="button" class="todo-add-btn" onclick="addTodoItem()">+ إضافة</button>
+      </div>
+
+      <ul class="todo-list" id="todoList"></ul>
+    </div>
+  </section>
+
+  <script>
+    // إعداد مكتبة PDF.js
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    // ===== التنقل بين الواجهات الثلاث =====
+    const notesView = document.getElementById("notesView");
+    const pomodoroView = document.getElementById("pomodoroView");
+    const todoView = document.getElementById("todoView");
+    const tabNotes = document.getElementById("tabNotes");
+    const tabPomo = document.getElementById("tabPomo");
+    const tabTodo = document.getElementById("tabTodo");
+
+    function switchView(viewName) {
+      notesView.classList.toggle("active", viewName === "notes");
+      pomodoroView.classList.toggle("active", viewName === "pomodoro");
+      todoView.classList.toggle("active", viewName === "todo");
+
+      tabNotes.classList.toggle("active", viewName === "notes");
+      tabPomo.classList.toggle("active", viewName === "pomodoro");
+      tabTodo.classList.toggle("active", viewName === "todo");
+
+      if (viewName === "notes") {
+        setTimeout(initCanvasSize, 40);
+      }
+    }
+
+    // ===== 1. منطق الملاحظات والصور وPDF والملصقات والحفظ =====
+    const STORAGE_KEY = "my_notes_ink_v3";
+    const PAPER_STORAGE_KEY = "my_notes_paper_style_v1";
+    const MAX_UNDO_STEPS = 20;
+
+    const bgCanvas = document.getElementById("bgLayerCanvas");
+    const bgCtx = bgCanvas.getContext("2d");
+    const canvas = document.getElementById("noteCanvas");
+    const ctx = canvas.getContext("2d");
+    const wrapper = document.getElementById("wrapper");
+
+    const textPanel = document.getElementById("textPanel");
+    const textInput = document.getElementById("textInputBox");
+    const stickerDrawer = document.getElementById("stickerDrawer");
+    const statusText = document.getElementById("statusText");
+    const saveStatus = document.getElementById("saveStatus");
+
+    const penBtn = document.getElementById("penBtn");
+    const textBtn = document.getElementById("textBtn");
+    const stickerBtn = document.getElementById("stickerBtn");
+    const eraserBtn = document.getElementById("eraserBtn");
+    const undoBtn = document.getElementById("undoBtn");
+    const paperSelect = document.getElementById("paperSelect");
+
+    const penColorInput = document.getElementById("penColor");
+    const penSizeInput = document.getElementById("penSize");
+    const fontSelect = document.getElementById("fontSelect");
+    const textColorInput = document.getElementById("textColor");
+    const textSizeInput = document.getElementById("textSize");
+    const mediaSizeSelect = document.getElementById("mediaSizeSelect");
+    const stickerSizeSelect = document.getElementById("stickerSizeSelect");
+
+    let mode = "pen";
+    let selectedSticker = "⭐";
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let textX = 40;
+    let textY = 80;
+    let isInitialized = false;
+    let undoStack = [];
+
+    // متغيرات PDF
+    let currentPdfDoc = null;
+    let currentPdfPage = 1;
+    const pdfBar = document.getElementById("pdfBar");
+    const pdfPageInfo = document.getElementById("pdfPageInfo");
+
+    function selectSticker(btnEl, emoji) {
+      selectedSticker = emoji;
+      document.querySelectorAll(".sticker-item").forEach((el) => el.classList.remove("selected"));
+      btnEl.classList.add("selected");
+      statusText.textContent = `الملصق المختار (${emoji}) — اضغط على الورقة لوضعه`;
+    }
+
+    function changePaperStyle(style, skipSave) {
+      const validStyles = ["plain", "lined", "grid"];
+      const chosen = validStyles.includes(style) ? style : "plain";
+      wrapper.classList.remove("paper-plain", "paper-lined", "paper-grid");
+      wrapper.classList.add(`paper-${chosen}`);
+      paperSelect.value = chosen;
+
+      if (!skipSave) {
+        try {
+          localStorage.setItem(PAPER_STORAGE_KEY, chosen);
+        } catch (e) {}
+      }
+    }
+
+    function restorePaperStyle() {
+      try {
+        const savedStyle = localStorage.getItem(PAPER_STORAGE_KEY) || "plain";
+        changePaperStyle(savedStyle, true);
+      } catch (e) {
+        changePaperStyle("plain", true);
+      }
+    }
+
+    function updateUndoButton() {
+      undoBtn.disabled = undoStack.length <= 1;
+    }
+
+    function pushUndoSnapshot() {
+      try {
+        const snapshot = canvas.toDataURL("image/png");
+        if (undoStack.length > 0 && undoStack[undoStack.length - 1] === snapshot) {
+          return;
+        }
+        undoStack.push(snapshot);
+        if (undoStack.length > MAX_UNDO_STEPS) {
+          undoStack.shift();
+        }
+        updateUndoButton();
+      } catch (e) {}
+    }
+
+    function undoLastAction() {
+      if (undoStack.length <= 1) return;
+      undoStack.pop();
+      const previousSnapshot = undoStack[undoStack.length - 1];
+      updateUndoButton();
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        saveNoteToStorage();
+        statusText.textContent = "تم التراجع عن آخر خطوة ↩️";
+      };
+      img.src = previousSnapshot;
+    }
+
+    function getSelectedFontFamily() {
+      const chosen = fontSelect.value || "Cairo";
+      return `"${chosen}", "Segoe UI", Tahoma, sans-serif`;
+    }
+
+    function syncTextPreviewStyle() {
+      textInput.style.fontFamily = getSelectedFontFamily();
+      textInput.style.color = textColorInput.value;
+      textInput.style.fontSize = `${Math.min(28, Number(textSizeInput.value))}px`;
+    }
+
+    function updateSaveLabel(msg) {
+      saveStatus.textContent = msg;
+    }
+
+    function saveNoteToStorage() {
+      try {
+        const dataUrl = canvas.toDataURL("image/png");
+        localStorage.setItem(STORAGE_KEY, dataUrl);
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        updateSaveLabel(`💾 تم الحفظ (${timeStr})`);
+      } catch (err) {
+        updateSaveLabel("⚠️ حجم الصورة كبير للتخزين التلقائي");
+      }
+    }
+
+    function restoreNoteFromStorage(targetW, targetH) {
+      try {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        ctx.globalCompositeOperation = "source-over";
+        ctx.clearRect(0, 0, targetW, targetH);
+
+        if (!savedData) {
+          updateSaveLabel("💾 ملاحظة جديدة (حفظ تلقائي مفعّل)");
+          pushUndoSnapshot();
+          return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          updateSaveLabel("📂 تم استرجاع ملاحظاتك المحفوظة");
+          pushUndoSnapshot();
+        };
+        img.src = savedData;
+      } catch (err) {
+        updateSaveLabel("⚠️ تعذر الاسترجاع");
+        pushUndoSnapshot();
+      }
+    }
+
+    function initCanvasSize() {
+      const w = wrapper.clientWidth;
+      const h = wrapper.clientHeight;
+      if (!w || !h) return;
+
+      if (!isInitialized) {
+        bgCanvas.width = w;
+        bgCanvas.height = h;
+        canvas.width = w;
+        canvas.height = h;
+        isInitialized = true;
+        restorePaperStyle();
+        restoreNoteFromStorage(w, h);
+        return;
+      }
+
+      if (canvas.width === w && canvas.height === h) return;
+
+      const tempInk = document.createElement("canvas");
+      tempInk.width = canvas.width;
+      tempInk.height = canvas.height;
+      tempInk.getContext("2d").drawImage(canvas, 0, 0);
+
+      const tempBg = document.createElement("canvas");
+      tempBg.width = bgCanvas.width;
+      tempBg.height = bgCanvas.height;
+      tempBg.getContext("2d").drawImage(bgCanvas, 0, 0);
+
+      bgCanvas.width = w;
+      bgCanvas.height = h;
+      bgCtx.clearRect(0, 0, w, h);
+      bgCtx.drawImage(tempBg, 0, 0);
+
+      canvas.width = w;
+      canvas.height = h;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(tempInk, 0, 0);
+    }
+
+    window.addEventListener("load", initCanvasSize);
+    window.addEventListener("resize", initCanvasSize);
+    setTimeout(initCanvasSize, 100);
+
+    function setMode(newMode) {
+      mode = newMode;
+      penBtn.classList.toggle("active", mode === "pen");
+      textBtn.classList.toggle("active", mode === "text");
+      stickerBtn.classList.toggle("active", mode === "sticker");
+      eraserBtn.classList.toggle("active", mode === "eraser");
+      stickerDrawer.classList.toggle("open", mode === "sticker");
+      hideTextPanel();
+
+      if (mode === "pen") {
+        statusText.textContent = "الوضع الحالي: قلم رسم — اسحب بصبعك للتلوين";
+      } else if (mode === "text") {
+        statusText.textContent = "الوضع الحالي: كتابة بخط رسمي — اضغط على مكان الكتابة";
+      } else if (mode === "sticker") {
+        statusText.textContent = `الوضع الحالي: ملصقات (${selectedSticker}) — اضغط على الورقة لوضعه`;
+      } else {
+        statusText.textContent = "الوضع الحالي: ممحاة — اسحب بصبعك لمسح الحبر";
+      }
+
+      setTimeout(initCanvasSize, 30);
+    }
+
+    // ===== رفع صورة من المعرض أو التقاطها بالكاميرا =====
+    function handleImageUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const scaleFactor = Number(mediaSizeSelect.value) || 0.65;
+          const maxW = canvas.width * scaleFactor;
+          const maxH = canvas.height * scaleFactor;
+          const ratio = Math.min(maxW / img.width, maxH / img.height, 1);
+
+          const drawW = img.width * ratio;
+          const drawH = img.height * ratio;
+          const posX = (canvas.width - drawW) / 2;
+          const posY = (canvas.height - drawH) / 2;
+
+          ctx.save();
+          ctx.globalCompositeOperation = "source-over";
+          ctx.drawImage(img, posX, posY, drawW, drawH);
+          ctx.restore();
+
+          pushUndoSnapshot();
+          saveNoteToStorage();
+          statusText.textContent = "تمت إضافة الصورة بنجاح — يمكنك الكتابة والرسم عليها ✍️";
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = "";
+    }
+
+    // ===== رفع وعرض ملفات PDF =====
+    async function handlePdfUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      if (!window.pdfjsLib) {
+        statusText.textContent = "⚠️ تعذر تحميل قارئ PDF، تأكد من الاتصال بالإنترنت";
+        return;
+      }
+
+      statusText.textContent = "جاري فتح ملف PDF...";
+      const arrayBuffer = await file.arrayBuffer();
+      try {
+        currentPdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        currentPdfPage = 1;
+        pdfBar.classList.add("open");
+        setTimeout(async () => {
+          initCanvasSize();
+          await renderPdfPage(currentPdfPage);
+        }, 40);
+      } catch (err) {
+        statusText.textContent = "⚠️ تعذر قراءة ملف PDF";
+      }
+      event.target.value = "";
+    }
+
+    async function renderPdfPage(pageNum) {
+      if (!currentPdfDoc) return;
+      const page = await currentPdfDoc.getPage(pageNum);
+      const unscaledViewport = page.getViewport({ scale: 1 });
+      const scale = Math.min(bgCanvas.width / unscaledViewport.width, bgCanvas.height / unscaledViewport.height);
+      const viewport = page.getViewport({ scale });
+
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      bgCtx.save();
+      const offsetX = (bgCanvas.width - viewport.width) / 2;
+      const offsetY = (bgCanvas.height - viewport.height) / 2;
+      bgCtx.translate(offsetX, offsetY);
+
+      await page.render({
+        canvasContext: bgCtx,
+        viewport: viewport
+      }).promise;
+      bgCtx.restore();
+
+      pdfPageInfo.textContent = `صفحة ${pageNum} / ${currentPdfDoc.numPages}`;
+      statusText.textContent = "يمكنك الآن الرسم والكتابة فوق صفحة الـ PDF";
+    }
+
+    async function changePdfPage(delta) {
+      if (!currentPdfDoc) return;
+      const next = currentPdfPage + delta;
+      if (next < 1 || next > currentPdfDoc.numPages) return;
+      currentPdfPage = next;
+      await renderPdfPage(currentPdfPage);
+    }
+
+    function closePdf() {
+      currentPdfDoc = null;
+      bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+      pdfBar.classList.remove("open");
+      setTimeout(initCanvasSize, 30);
+    }
+
+    function getPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      let clientX, clientY;
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        clientX = e.changedTouches[0].clientX;
+        clientY = e.changedTouches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function drawDot(x, y) {
+      ctx.save();
+      if (mode === "eraser") {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.beginPath();
+        ctx.arc(x, y, Number(penSizeInput.value) * 1.25, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.fill();
+      } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.beginPath();
+        ctx.arc(x, y, Number(penSizeInput.value) / 2, 0, Math.PI * 2);
+        ctx.fillStyle = penColorInput.value;
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function placeStickerAt(x, y) {
+      const size = Number(stickerSizeSelect.value) || 44;
+      ctx.save();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(selectedSticker, x, y);
+      ctx.restore();
+
+      pushUndoSnapshot();
+      saveNoteToStorage();
+    }
+
+    function onStart(e) {
+      const pt = getPoint(e);
+
+      if (mode === "text") {
+        e.preventDefault();
+        textX = pt.x;
+        textY = pt.y;
+        textPanel.style.display = "flex";
+        syncTextPreviewStyle();
+        textInput.value = "";
+        setTimeout(() => textInput.focus(), 50);
+        return;
+      }
+
+      if (mode === "sticker") {
+        e.preventDefault();
+        placeStickerAt(pt.x, pt.y);
+        return;
+      }
+
+      e.preventDefault();
+      isDrawing = true;
+      lastX = pt.x;
+      lastY = pt.y;
+      drawDot(lastX, lastY);
+    }
+
+    function onMove(e) {
+      if (!isDrawing || mode === "text" || mode === "sticker") return;
+      e.preventDefault();
+      const pt = getPoint(e);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(pt.x, pt.y);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      if (mode === "eraser") {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.strokeStyle = "rgba(0,0,0,1)";
+        ctx.lineWidth = Number(penSizeInput.value) * 2.5;
+      } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = penColorInput.value;
+        ctx.lineWidth = Number(penSizeInput.value);
+      }
+
+      ctx.stroke();
+      ctx.restore();
+
+      lastX = pt.x;
+      lastY = pt.y;
+    }
+
+    function onEnd() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      pushUndoSnapshot();
+      saveNoteToStorage();
+    }
+
+    function hideTextPanel() {
+      textPanel.style.display = "none";
+      textInput.value = "";
+    }
+
+    async function commitText() {
+      const val = textInput.value.trim();
+      if (val) {
+        const size = Number(textSizeInput.value);
+        const fontFamily = getSelectedFontFamily();
+        const color = textColorInput.value;
+        const x = textX;
+        const y = textY;
+
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+
+        ctx.save();
+        ctx.globalCompositeOperation = "source-over";
+        ctx.font = `700 ${size}px ${fontFamily}`;
+        ctx.fillStyle = color;
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        ctx.fillText(val, x, y);
+        ctx.restore();
+
+        pushUndoSnapshot();
+        saveNoteToStorage();
+      }
+      hideTextPanel();
+    }
+
+    textInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commitText();
+      }
+    });
+
+    function clearCanvas() {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hideTextPanel();
+      pushUndoSnapshot();
+      saveNoteToStorage();
+    }
+
+    canvas.addEventListener("pointerdown", onStart);
+    canvas.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onEnd);
+
+    // ===== 2. منطق بومودورو =====
+    let pomoType = "focus";
+    let focusMinutes = 25;
+    let breakMinutes = 5;
+    let remainingSeconds = focusMinutes * 60;
+    let pomoInterval = null;
+    let completedSessions = 0;
+
+    const pomoDisplay = document.getElementById("pomoDisplay");
+    const togglePomoBtn = document.getElementById("togglePomoBtn");
+    const focusModeBtn = document.getElementById("focusModeBtn");
+    const breakModeBtn = document.getElementById("breakModeBtn");
+    const customMinutesInput = document.getElementById("customMinutes");
+    const pomoSessionCount = document.getElementById("pomoSessionCount");
+
+    function renderPomoDisplay() {
+      const mins = Math.floor(remainingSeconds / 60);
+      const secs = remainingSeconds % 60;
+      pomoDisplay.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      pomoDisplay.classList.toggle("break-mode", pomoType === "break");
+      focusModeBtn.className = pomoType === "focus" ? "active" : "";
+      breakModeBtn.className = pomoType === "break" ? "break-active" : "";
+    }
+
+    function playBeep() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioCtx();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.45);
+      } catch (e) {}
+    }
+
+    function stopPomoInterval() {
+      if (pomoInterval) {
+        clearInterval(pomoInterval);
+        pomoInterval = null;
+      }
+      togglePomoBtn.textContent = "▶ بدء";
+      togglePomoBtn.className = "start-btn";
+    }
+
+    function togglePomo() {
+      if (pomoInterval) {
+        stopPomoInterval();
+        return;
+      }
+
+      togglePomoBtn.textContent = "⏸ إيقاف";
+      togglePomoBtn.className = "pause-btn";
+
+      pomoInterval = setInterval(() => {
+        if (remainingSeconds > 0) {
+          remainingSeconds -= 1;
+          renderPomoDisplay();
+        } else {
+          stopPomoInterval();
+          playBeep();
+          if (pomoType === "focus") {
+            completedSessions += 1;
+            pomoSessionCount.textContent = `جلسات التركيز المكتملة: ${completedSessions}`;
+            switchPomoType("break");
+          } else {
+            switchPomoType("focus");
+          }
+        }
+      }, 1000);
+    }
+
+    function switchPomoType(type) {
+      stopPomoInterval();
+      pomoType = type;
+      const mins = pomoType === "focus" ? focusMinutes : breakMinutes;
+      customMinutesInput.value = mins;
+      remainingSeconds = mins * 60;
+      renderPomoDisplay();
+    }
+
+    function applyCustomMinutes() {
+      const val = Math.max(1, Math.min(120, Number(customMinutesInput.value) || 25));
+      customMinutesInput.value = val;
+      if (pomoType === "focus") {
+        focusMinutes = val;
+      } else {
+        breakMinutes = val;
+      }
+      stopPomoInterval();
+      remainingSeconds = val * 60;
+      renderPomoDisplay();
+    }
+
+    function resetPomo() {
+      stopPomoInterval();
+      const mins = pomoType === "focus" ? focusMinutes : breakMinutes;
+      remainingSeconds = mins * 60;
+      renderPomoDisplay();
+    }
+
+    renderPomoDisplay();
+
+    // ===== 3. منطق قائمة المهام (To-Do) مع الحفظ التلقائي =====
+    const TODO_STORAGE_KEY = "my_study_todos_v1";
+    const todoInput = document.getElementById("todoInput");
+    const todoListEl = document.getElementById("todoList");
+    const todoStatsEl = document.getElementById("todoStats");
+
+    let todos = [];
+
+    function loadTodos() {
+      try {
+        const raw = localStorage.getItem(TODO_STORAGE_KEY);
+        todos = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        todos = [];
+      }
+      renderTodos();
+    }
+
+    function saveTodos() {
+      try {
+        localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
+      } catch (e) {}
+    }
+
+    function addTodoItem() {
+      const text = todoInput.value.trim();
+      if (!text) return;
+      todos.unshift({ id: Date.now(), text, done: false });
+      todoInput.value = "";
+      saveTodos();
+      renderTodos();
+    }
+
+    function toggleTodoItem(id) {
+      todos = todos.map((item) => (item.id === id ? { ...item, done: !item.done } : item));
+      saveTodos();
+      renderTodos();
+    }
+
+    function deleteTodoItem(id) {
+      todos = todos.filter((item) => item.id !== id);
+      saveTodos();
+      renderTodos();
+    }
+
+    function renderTodos() {
+      const doneCount = todos.filter((t) => t.done).length;
+      todoStatsEl.textContent = `${doneCount} / ${todos.length} مكتمل`;
+
+      if (todos.length === 0) {
+        todoListEl.innerHTML = `<li class="todo-empty">لا توجد مهام حالياً — اكتب مهمتك الأولى فوق ✍️</li>`;
+        return;
+      }
+
+      todoListEl.innerHTML = todos
+        .map(
+          (item) => `
+          <li class="todo-item ${item.done ? "completed" : ""}">
+            <button type="button" class="todo-check" onclick="toggleTodoItem(${item.id})">${item.done ? "✓" : ""}</button>
+            <span class="todo-text">${item.text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+            <button type="button" class="todo-del-btn" onclick="deleteTodoItem(${item.id})" title="حذف">✕</button>
+          </li>
+        `
+        )
+        .join("");
+    }
+
+    loadTodos();
+  </script>
+</body>
+</html>
+
